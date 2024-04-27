@@ -36,13 +36,19 @@
                 username:username,
                 email:email,
                 password:password
-            }).then(res=>{
+            }).then(response=>{
 
-                console.log(res.data)
+                console.log(response.data);
+                console.log(response.message)
 
-            })
-            .catch(err=>{
-                console.log(err);
+            
+        
+        } )
+
+
+    .catch(err=>{
+                
+              console.log(err.message)
             })
         
     })

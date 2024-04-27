@@ -8,14 +8,24 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
 app.use(express.static('public'));
+const sequelize = require('./models/index');
+const Users = require('./models/index')
 
 app.post('/signup' , async(req , res)=>{
     try{
 
        const {username , email , password} = req.body
 
-        console.log(req.body);
-        res.json(req.body);
+       const existingUser = await Users.findOne({ where: { email: email } });
+    if (existingUser) {
+      res.status(409).json({ message: "User already exists with the same email address" });
+      return;
+     
+    }
+       const newUser = await Users.create({username , email,password});
+
+        console.log(newUser);
+        res.json(newUser);
     
     
     }
@@ -24,8 +34,13 @@ app.post('/signup' , async(req , res)=>{
 
 
         console.log(err)
+        res.status(500).send(err.message);
 
     }
 })
 
-app.listen(3000)
+sequelize.sync().then(() => {
+    app.listen(3000, () => {
+      console.log(`Server is running on port 3000`);
+    });
+  });
