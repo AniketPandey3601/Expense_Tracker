@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Expense Tracker</title>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+</head>
+<body>
+    <form action="/signup" id = "signupForm">
+        Username:<input type = "text" name ="username" id="username" required><br>
+        Email: <input type="email" name="email" id ="email" required><br>
+        Password:<input type="text" name="password" id = "password"><br>
+        <button type = "submit">Submit</button>
+
+
+    </form>
+
+</body>
+
+<script>
+    const signupForm = document.getElementById('signupForm');
+
+    signupForm.addEventListener('submit' , async(event)=>{
+
+        event.preventDefault();
+
+        const formData = new FormData(event.target);
+        const username = formData.get('username');
+        const email = formData.get('email');
+        const password = formData.get('password');
+
+       
+
+            axios.post('/signup',{
+                username:username,
+                email:email,
+                password:password
+            }).then(res=>{
+
+                console.log(res.data)
+
+            })
+            .catch(err=>{
+                console.log(err);
+            })
+        
+    })
+
+</script>
+
