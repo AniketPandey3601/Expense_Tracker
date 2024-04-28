@@ -2,6 +2,7 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const signuproutes = require('./routes/signup');
 const loginroutes = require('./routes/login')
+const expensesroutes = require('./routes/expense')
 
 const app = express();
 
@@ -15,6 +16,7 @@ const Users = require('./models/index')
 
 app.use('/signup',signuproutes);
 app.use('/login' , loginroutes);
+app.use('/expenses' , expensesroutes);
 
 
 

@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DExpense Tracker</title>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+
+</head>
+<body>
+    <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Manage Expenses</title>
+</head>
+<body>
+    <h2>Expense Manager</h2>
+    <form id="expenseForm">
+        <input type="number" id="amount" placeholder="Amount spent" required><br>
+        <input type="text" id="description" placeholder="Description" required><br>
+        <select id="category">
+            <option value="Food">Food</option>
+            <option value="Petrol">Petrol</option>
+            <option value="Salary">Salary</option>
+            <option value="Other">Other</option>
+        </select><br>
+        <button type="button" onclick="addExpense()">Add Expense</button>
+    </form>
+    <div id="expensesList"></div>
+    <script src="expenses.js"></script>
+</body>
+<script>
+
+document.addEventListener('DOMContentLoaded', function() {
+ 
+
+    document.getElementById('expenseForm').addEventListener('submit', function(event) {
+        event.preventDefault();
+        addExpense();
+    });
+
+    loadExpenses();
+});
+
+
+    function addExpense() {
+    const amount = document.getElementById('amount').value;
+    const description = document.getElementById('description').value;
+    const category = document.getElementById('category').value;
+
+    axios.post('/expenses', {
+        amount,
+        description,
+        category
+    })
+    .then(response => {
+        displayExpense(response.data);
+        console.log('Expense added:', response.data);
+    })
+    .catch(error => console.error('Error adding expense:', error));
+
+  
+    document.getElementById('amount').value = '';
+    document.getElementById('description').value = '';
+    document.getElementById('category').selectedIndex = 0;
+}
+
+
+
+function loadExpenses() {
+    axios.get('/expenses')
+    .then(response => {
+        response.data.forEach(expense => {
+            displayExpense(expense);
+        });
+    })
+    .catch(error => console.error('Error loading expenses:', error));
+}
+
+function displayExpense(expense) {
+    const expenseList = document.getElementById('expensesList');
+    const entry = document.createElement('div');
+    entry.textContent = `Amount: ${expense.amount}, Description: ${expense.description}, Category: ${expense.category}`;
+    expenseList.appendChild(entry);
+}
+</script>
+</html>
+    
+</body>
+</html>

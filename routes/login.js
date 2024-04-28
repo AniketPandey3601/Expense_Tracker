@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
-const Users  = require('../models/index');
+const Users  = require('../models/Users');
+
 const bcrypt = require('bcrypt');
 
 
@@ -19,8 +20,9 @@ router.post('/',async(req,res)=>{
         if (!match) {
             return res.status(401).send("Invalid credentials");
         }
-        
-        res.json({message:"Logged In" , user: {id : user.id, username :user.username ,email:user.email}});
+
+        // return res.json({message:"Logged In" , user: {id : user.id, username :user.username ,email:user.email}});
+        return res.redirect('/index.html')
         
     }
     catch(error){
