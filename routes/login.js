@@ -1,7 +1,8 @@
 const express = require('express');
 const router = express.Router();
-
 const Users  = require('../models/index');
+const bcrypt = require('bcrypt');
+
 
 router.post('/',async(req,res)=>{
 
@@ -11,12 +12,14 @@ router.post('/',async(req,res)=>{
 
         const user = await Users.findOne({where:{email:email}});
         if(!user){
-            return res.status(404).json({message : "User not found"});
+            return res.status(404).json({message : "User not authorized"});
         }
-        if(user.password != password){
-
-            return res.status(401).json({message:"Invalid credentials"})
+       
+        const match = await bcrypt.compare(password, user.password);
+        if (!match) {
+            return res.status(401).send("Invalid credentials");
         }
+        
         res.json({message:"Logged In" , user: {id : user.id, username :user.username ,email:user.email}});
         
     }
