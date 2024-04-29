@@ -3,7 +3,9 @@ const bodyParser = require('body-parser');
 const signuproutes = require('./routes/signup');
 const loginroutes = require('./routes/login')
 const expensesroutes = require('./routes/expense')
+const razorpayRoutes = require('./routes/razorpay')
 
+require('dotenv').config();
 const app = express();
 
 
@@ -16,12 +18,13 @@ const Users = require('./models/Users')
 const Expense = require('./models/expenses')
 
 
-Users.hasMany(Expense);
-Expense.belongsTo(Users);
+Users.hasMany(Expense,{ foreignKey: 'userId' });
+Expense.belongsTo(Users,{ foreignKey: 'userId' });
 
 app.use('/signup',signuproutes);
 app.use('/login' , loginroutes);
 app.use('/expenses' , expensesroutes);
+app.use('/razorpay', razorpayRoutes);
 
 
 

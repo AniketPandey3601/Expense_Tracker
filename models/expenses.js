@@ -5,6 +5,10 @@ const Expense = sequelize.define('Expense', {
     amount: DataTypes.FLOAT,
     description: DataTypes.STRING,
     category: DataTypes.STRING,
+    userId: {
+        type: DataTypes.INTEGER,
+        allowNull: false
+    }
  
   });
 

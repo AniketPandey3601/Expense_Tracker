@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>DExpense Tracker</title>
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 
 </head>
 <body>
@@ -27,8 +28,14 @@
         </select><br>
         <button type="button" onclick="addExpense()">Add Expense</button>
     </form>
+    <br>
+
+    <div><button id="buyPremiumBtn" onclick="buyPremium()">Buy Premium</button></div>
+
+
+
     <div id="expensesList"></div>
-    <script src="expenses.js"></script>
+    <!-- <script src="expenses.js"></script> -->
 </body>
 <script>
 
@@ -53,7 +60,7 @@ document.addEventListener('DOMContentLoaded', function() {
         amount,
         description,
         category
-    })
+    },{ headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }})
     .then(response => {
         displayExpense(response.data);
         console.log('Expense added:', response.data);
@@ -69,7 +76,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
 
 function loadExpenses() {
-    axios.get('/expenses')
+    axios.get('/expenses', {
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+    })
     .then(response => {
         response.data.forEach(expense => {
             displayExpense(expense);
@@ -81,9 +90,80 @@ function loadExpenses() {
 function displayExpense(expense) {
     const expenseList = document.getElementById('expensesList');
     const entry = document.createElement('div');
-    entry.textContent = `Amount: ${expense.amount}, Description: ${expense.description}, Category: ${expense.category}`;
+    entry.innerHTML = `Amount: ${expense.amount}, Description: ${expense.description}, Category: ${expense.category}  <button onclick="deleteExpense(${expense.id})">Delete</button>`;
     expenseList.appendChild(entry);
 }
+
+function deleteExpense(id) {
+    axios.delete(`/expenses/${id}`, {
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+    })
+    .then(() => {
+        document.getElementById('expensesList').innerHTML = ''; 
+        loadExpenses(); 
+    })
+    .catch(error => console.error('Error deleting expense:', error));
+}
+
+
+function buyPremium() {
+        axios.post('/razorpay/create-order', {}, {
+            headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+        })
+        .then(response => {
+            const orderData = response.data;
+            const options = {
+                key: 'YOUR_RAZORPAY_KEY_ID',
+                amount: orderData.amount,
+                currency: orderData.currency,
+                name: 'DExpense Tracker',
+                description: 'Premium Subscription',
+                order_id: orderData.id,
+                handler: function(response) {
+                    handlePaymentSuccess(response);
+                },
+                prefill: {
+                    email: 'user@example.com',
+                    contact: '9999999999'
+                },
+                theme: {
+                    color: '#3399cc'
+                }
+            };
+            const rzp = new Razorpay(options);
+            rzp.open();
+        })
+        .catch(error => {
+            console.error('Error creating Razorpay order:', error);
+        });
+    }
+
+    function handlePaymentSuccess(response) {
+        axios.post('/razorpay/payment-success', { orderId: response.razorpay_order_id }, {
+            headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+        })
+        .then(response => {
+            alert('Payment successful! You are now a premium member.');
+            console.log('Premium status updated successfully:', response.data);
+        })
+        .catch(error => {
+            console.error('Error handling payment success:', error);
+        });
+    }
+
+    function handlePaymentFailure(error) {
+        const orderId = error.razorpay_order_id;
+        axios.post('/razorpay/payment-failure', { orderId }, {
+            headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+        })
+        .then(response => {
+            alert('Transaction failed. Please try again later.');
+            console.log('Order status updated to failed:', response.data);
+        })
+        .catch(error => {
+            console.error('Error handling payment failure:', error);
+        });
+    }
 </script>
 </html>
     
