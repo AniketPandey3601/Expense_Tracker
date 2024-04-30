@@ -19,14 +19,8 @@ router.get('/user', authenticateToken, async (req, res) => {
         if (isPremium) {
             
             const leaderboardData = await Users.findAll({
-                attributes: ['id', 'username', [Sequelize.fn('SUM', Sequelize.col('expenses.amount')), 'totalAmount']],
-                include: [{
-                    model: Expense,
-                    attributes: [],
-                    where: { userId: Sequelize.col('Users.id') }
-                }],
-                group: ['Users.id'],
-                order: [[Sequelize.literal('totalAmount'), 'DESC']]
+                attributes: ['id', 'username', 'totalExpense'],
+                order: [['totalExpense', 'DESC']]
             });
 
             res.json({ isPremium: true, leaderboard: leaderboardData });
@@ -64,6 +58,11 @@ router.post('/', authenticateToken,async (req, res) => {
             userId
            
         });
+
+        const user = await Users.findByPk(userId);
+        user.totalExpense += parseInt(amount);
+        await user.save();
+
         res.json(newExpense);
     } catch (error) {
         console.log(error);

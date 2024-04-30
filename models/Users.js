@@ -28,7 +28,15 @@ const Users = sequelize.define('Users', {
         type: DataTypes.BOOLEAN,
         allowNull: false,
         defaultValue: false 
-    }
+    },
+
+    totalExpense:
+        {
+            type: DataTypes.INTEGER,
+            defaultValue: 0
+          }
+    
+    
 
 
 });

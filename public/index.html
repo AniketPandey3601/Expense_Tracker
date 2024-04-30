@@ -42,6 +42,9 @@
 <script>
 
 document.addEventListener('DOMContentLoaded', function() {
+
+    
+    checkPremiumStatus();
  
 
     document.getElementById('expenseForm').addEventListener('submit', function(event) {
@@ -49,7 +52,7 @@ document.addEventListener('DOMContentLoaded', function() {
         addExpense();
     });
 
-    checkPremiumStatus();
+   
 
     loadExpenses();
 });
@@ -207,7 +210,7 @@ function buyPremium() {
         leaderboardContainer.innerHTML = '<h3>Leaderboard</h3>';
         leaderboard.forEach(user => {
             const userEntry = document.createElement('div');
-            userEntry.textContent = `Name: ${user.username}, Total Amount Spent: ${user.totalAmount}`;
+            userEntry.textContent = `Name: ${user.username}, Total Amount Spent: ${user.totalExpense}`;
             leaderboardContainer.appendChild(userEntry);
         });
     })
