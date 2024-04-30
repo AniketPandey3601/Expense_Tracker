@@ -35,7 +35,9 @@
 
 
     <div id="expensesList"></div>
-    <!-- <script src="expenses.js"></script> -->
+   
+
+    <div id="leaderboard"></div>
 </body>
 <script>
 
@@ -62,7 +64,7 @@ function checkPremiumStatus() {
             console.log(isPremium);
 
             if (isPremium) {
-                document.getElementById('premiumStatus').innerText = 'You are a premium user.';
+                document.getElementById('premiumStatus').innerHTML = 'You are a premium user.<button onClick ="showLeaderboard()">Show LeaderBoard</button>';
             } else {
                 // const buyPremiumBtnContainer = document.getElementById('buyPremiumBtnContainer');
                 const buyPremiumBtnContainer = document.getElementById('premiumStatus');
@@ -191,6 +193,28 @@ function buyPremium() {
             console.error('Error handling payment failure:', error);
         });
     }
+
+
+
+
+    function showLeaderboard() {
+    axios.get('/expenses/user', {
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+    })
+    .then(response => {
+        const leaderboard = response.data.leaderboard;
+        const leaderboardContainer = document.getElementById('leaderboard');
+        leaderboardContainer.innerHTML = '<h3>Leaderboard</h3>';
+        leaderboard.forEach(user => {
+            const userEntry = document.createElement('div');
+            userEntry.textContent = `Name: ${user.username}, Total Amount Spent: ${user.totalAmount}`;
+            leaderboardContainer.appendChild(userEntry);
+        });
+    })
+    .catch(error => {
+        console.error('Error fetching leaderboard:', error);
+    });
+}
 </script>
 </html>
     

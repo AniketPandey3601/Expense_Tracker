@@ -3,6 +3,7 @@ const router = express.Router();
 const Expense  = require('../models/expenses');
 const Users = require('../models/Users')
 const authenticateToken = require('../middleware/authenticateToken')
+const Sequelize = require('../models/index');
 
 
  
@@ -13,12 +14,42 @@ router.get('/user', authenticateToken, async (req, res) => {
     try {
         const userId = req.user.userId; 
         const user = await Users.findByPk(userId);
-        res.json({isPremium:user.isPremium});
+        const isPremium = user.isPremium;
+
+        if (isPremium) {
+            
+            const leaderboardData = await Users.findAll({
+                attributes: ['id', 'username', [Sequelize.fn('SUM', Sequelize.col('expenses.amount')), 'totalAmount']],
+                include: [{
+                    model: Expense,
+                    attributes: [],
+                    where: { userId: Sequelize.col('Users.id') }
+                }],
+                group: ['Users.id'],
+                order: [[Sequelize.literal('totalAmount'), 'DESC']]
+            });
+
+            res.json({ isPremium: true, leaderboard: leaderboardData });
+        } else {
+            res.json({ isPremium: false });
+        }
     } catch (error) {
         console.log(error);
         res.status(500).send(error.message);
     }
 });
+
+
+// router.get('/user', authenticateToken, async (req, res) => {
+//     try {
+//         const userId = req.user.userId; 
+//         const user = await Users.findByPk(userId);
+//         res.json({isPremium:user.isPremium});
+//     } catch (error) {
+//         console.log(error);
+//         res.status(500).send(error.message);
+//     }
+// });
 
 
 router.post('/', authenticateToken,async (req, res) => {
