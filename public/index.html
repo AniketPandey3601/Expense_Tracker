@@ -30,7 +30,7 @@
     </form>
     <br>
 
-    <div><button id="buyPremiumBtn" onclick="buyPremium()">Buy Premium</button></div>
+    <div id="premiumStatus"></div>
 
 
 
@@ -47,8 +47,35 @@ document.addEventListener('DOMContentLoaded', function() {
         addExpense();
     });
 
+    checkPremiumStatus();
+
     loadExpenses();
 });
+
+function checkPremiumStatus() {
+        axios.get('/expenses/user', {
+            headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+        })
+        .then(response => {
+            const isPremium = response.data.isPremium;
+            console.log(response.data)
+            console.log(isPremium);
+
+            if (isPremium) {
+                document.getElementById('premiumStatus').innerText = 'You are a premium user.';
+            } else {
+                // const buyPremiumBtnContainer = document.getElementById('buyPremiumBtnContainer');
+                const buyPremiumBtnContainer = document.getElementById('premiumStatus');
+                 buyPremiumBtnContainer.innerHTML='<div><button id="buyPremiumBtn" onclick="buyPremium()">Buy Premium</button></div>';
+                // buyPremiumBtn.innerText = 'Buy Premium';
+                // buyPremiumBtn.onclick = buyPremium;
+                buyPremiumBtnContainer.appendChild(buyPremiumBtn);
+            }
+        })
+        .catch(error => {
+            console.error('Error checking premium status:', error);
+        });
+    }
 
 
     function addExpense() {
@@ -113,7 +140,7 @@ function buyPremium() {
         .then(response => {
             const orderData = response.data;
             const options = {
-                key: 'YOUR_RAZORPAY_KEY_ID',
+                key: 'rzp_test_PmdqHSSuqH8zOe',
                 amount: orderData.amount,
                 currency: orderData.currency,
                 name: 'DExpense Tracker',

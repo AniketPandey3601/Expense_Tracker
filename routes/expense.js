@@ -1,9 +1,25 @@
 const express = require('express');
 const router = express.Router();
 const Expense  = require('../models/expenses');
+const Users = require('../models/Users')
 const authenticateToken = require('../middleware/authenticateToken')
+
+
  
 router.use(authenticateToken);
+
+
+router.get('/user', authenticateToken, async (req, res) => {
+    try {
+        const userId = req.user.userId; 
+        const user = await Users.findByPk(userId);
+        res.json({isPremium:user.isPremium});
+    } catch (error) {
+        console.log(error);
+        res.status(500).send(error.message);
+    }
+});
+
 
 router.post('/', authenticateToken,async (req, res) => {
     try {

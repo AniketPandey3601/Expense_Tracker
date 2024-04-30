@@ -5,16 +5,17 @@ const Razorpay = require('razorpay');
 const OrderId = require('../models/orderId');
 const PurchaseId = require('../models/purchaseId');
 const authenticateToken = require('../middleware/authenticateToken');
+const Users = require('../models/Users')
 
 const razorpay = new Razorpay({
-    key_id: 'YOUR_RAZORPAY_KEY_ID',
-    key_secret: 'YOUR_RAZORPAY_KEY_SECRET'
+    key_id: 'rzp_test_PmdqHSSuqH8zOe',
+    key_secret: 'UXHgKedX7yzo8IfWicgWAPWU'
 });
 
 router.post('/create-order', authenticateToken, async (req, res) => {
     try {
         const orderOptions = {
-            amount: 50000, // Amount in paise (change as per your premium price)
+            amount: 5000, 
             currency: 'INR',
             receipt: 'premium_subscription_' + req.user.userId,
             payment_capture: 1
@@ -40,6 +41,7 @@ router.post('/payment-success', authenticateToken, async (req, res) => {
         // const user = await User.findById(userId);
         // user.isPremium = true;
         // await user.save();
+        await Users.update({ isPremium: true }, { where: { id: req.user.userId } });
         res.json({ message: 'Payment successful! You are now a premium member.' });
     } catch (error) {
         console.error('Error handling payment success:', error);
