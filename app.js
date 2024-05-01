@@ -6,6 +6,7 @@ const expensesroutes = require('./routes/expense')
 const razorpayRoutes = require('./routes/razorpay')
 const forgotpassRoutes = require('./routes/passwordreset')
 
+
 require('dotenv').config();
 const app = express();
 
@@ -18,13 +19,17 @@ const sequelize = require('./models/index');
 const Users = require('./models/Users')
 const Expense = require('./models/expenses');
 const OrderId = require('./models/orderId');
+const ForgotPasswordRequest = require('./models/forgotpasswordrequests')
 
 
 Users.hasMany(Expense,{ foreignKey: 'userId' });
 Expense.belongsTo(Users,{ foreignKey: 'userId' });
 
-Users.hasMany(OrderId)
-OrderId.belongsTo(Users);
+Users.hasMany(OrderId,{ foreignKey: 'userId' })
+OrderId.belongsTo(Users,{ foreignKey: 'userId' });
+
+Users.hasMany(ForgotPasswordRequest,{ foreignKey: 'userId' })
+ForgotPasswordRequest.belongsTo(Users,{ foreignKey: 'userId' });
 
 app.use('/signup',signuproutes);
 app.use('/login' , loginroutes);

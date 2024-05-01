@@ -86,7 +86,8 @@
         function submitForgotPassword() {
             const email = document.getElementById('forgotEmail').value;
 
-            axios.post('/password/forgotpassword', { email })
+            axios.post('/password/forgotpassword', { email },{headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+        })
                 .then(response => {
                     alert("Password reset email sent successfully!");
                     // Optionally, hide the forgot password form after submission
