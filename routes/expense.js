@@ -3,7 +3,7 @@ const router = express.Router();
 const Expense  = require('../models/expenses');
 const Users = require('../models/Users')
 const authenticateToken = require('../middleware/authenticateToken')
-const Sequelize = require('../models/index');
+const sequelize = require('../models/index');
 
 
  
@@ -47,7 +47,12 @@ router.get('/user', authenticateToken, async (req, res) => {
 
 
 router.post('/', authenticateToken,async (req, res) => {
+
+    let transaction;
     try {
+
+       transaction = await sequelize.transaction()
+
         const { amount, description, category } = req.body;
         const userId = req.user.userId
       
@@ -57,15 +62,21 @@ router.post('/', authenticateToken,async (req, res) => {
             category,
             userId
            
-        });
+        },{transaction});
 
-        const user = await Users.findByPk(userId);
+        const user = await Users.findByPk(userId,{transaction});
         user.totalExpense += parseInt(amount);
-        await user.save();
+        await user.save({transaction});
+
+        await transaction.commit()
 
         res.json(newExpense);
     } catch (error) {
+
         console.log(error);
+        if(transaction){
+            await transaction.rollback();
+        }
         res.status(500).send(error.message);
     }
 });
@@ -86,22 +97,41 @@ router.get('/', authenticateToken, async (req, res) => {
     }
 });
 
-router.delete('/:id', authenticateToken,async (req, res) => {
+router.delete('/:id', authenticateToken, async (req, res) => {
+    let transaction;
     try {
-        const userId = req.user.userId; 
+        transaction = await sequelize.transaction();
+
+        const userId = req.user.userId;
         const id = req.params.id;
-        const result = await Expense.destroy({
-            where: {userId:userId}&&{ id: id }
-        });
-        if (result === 1) {
-            res.status(204).send();  
-        } else {
-            res.status(404).send({ message: "Expense not found" });
+
+        // Find the expense to be deleted
+        const expenseToDelete = await Expense.findOne({ where: { id, userId }, transaction });
+
+        if (!expenseToDelete) {
+            // If expense not found, rollback transaction and send 404
+            await transaction.rollback();
+            return res.status(404).json({ message: "Expense not found" });
         }
+
+        // Delete the expense
+        await Expense.destroy({ where: { id, userId }, transaction });
+
+        // Update totalExpense for the user
+        const user = await Users.findByPk(userId, { transaction });
+        user.totalExpense -= expenseToDelete.amount;
+        await user.save({ transaction });
+
+        // Commit the transaction
+        await transaction.commit();
+
+        res.status(204).send();
     } catch (error) {
         console.log(error);
+        if (transaction) await transaction.rollback();
         res.status(500).send(error.message);
     }
 });
+
 
 module.exports = router;
