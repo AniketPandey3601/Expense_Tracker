@@ -4,6 +4,7 @@ const signuproutes = require('./routes/signup');
 const loginroutes = require('./routes/login')
 const expensesroutes = require('./routes/expense')
 const razorpayRoutes = require('./routes/razorpay')
+const forgotpassRoutes = require('./routes/passwordreset')
 
 require('dotenv').config();
 const app = express();
@@ -29,6 +30,8 @@ app.use('/signup',signuproutes);
 app.use('/login' , loginroutes);
 app.use('/expenses' , expensesroutes);
 app.use('/razorpay', razorpayRoutes);
+app.use('/password', forgotpassRoutes);
+
 
 
 
