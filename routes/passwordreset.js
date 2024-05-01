@@ -5,10 +5,10 @@ const Sib = require('sib-api-v3-sdk');
 // Initialize the SendinBlue API client
 const defaultClient = Sib.ApiClient.instance;
 const apiKey = defaultClient.authentications['api-key'];
-apiKey.apiKey = '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';
-
+apiKey.apiKey = 'api-key';
+require ('dotenv').config()
 // Define your SendinBlue sender email address
-const senderEmail = '';
+const senderEmail = 'sender-email';
 
 router.post('/forgotpassword', async (req, res) => {
     try {
