@@ -405,7 +405,7 @@ function showLeaderboard() {
 }
 
 function downloadExpenseFile() {
-    axios.get('/expenses/download', {
+    axios.get('/expenses/report', {
         responseType: 'blob',
         headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
     })

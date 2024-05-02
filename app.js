@@ -20,6 +20,7 @@ const Users = require('./models/Users')
 const Expense = require('./models/expenses');
 const OrderId = require('./models/orderId');
 const ForgotPasswordRequest = require('./models/forgotpasswordrequests')
+const expensereportRoutes = require('./routes/expense_report')
 
 
 Users.hasMany(Expense,{ foreignKey: 'userId' });
@@ -36,6 +37,7 @@ app.use('/login' , loginroutes);
 app.use('/expenses' , expensesroutes);
 app.use('/razorpay', razorpayRoutes);
 app.use('/password', forgotpassRoutes);
+app.use('/expenses/report',expensereportRoutes)
 
 
 
