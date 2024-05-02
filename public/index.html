@@ -260,8 +260,16 @@ function buyPremium() {
         <h3>Download Expense File</h3>
         <button onclick="downloadExpenseFile()">Download</button>
     </div>
+    <ul id="fileList"></ul>
+
+    <div id="pagination">
+        <button id="prevPageBtn" onclick="prevPage()">Previous</button>
+        <button id="nextPageBtn" onclick="nextPage()">Next</button>
+    </div>
 </body>
 <script>
+
+let currentPage = 1;
 document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('expenseForm').addEventListener('submit', function(event) {
         event.preventDefault();
@@ -310,7 +318,7 @@ function addExpense() {
 }
 
 function loadExpenses() {
-    axios.get('/expenses', {
+    axios.get('/expenses?page=${currentPage}&limit=10', {
         headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
     })
     .then(response => {
@@ -420,6 +428,45 @@ function downloadExpenseFile() {
         window.URL.revokeObjectURL(url);
     })
     .catch(error => console.error('Error downloading expense file:', error));
+
+
+    axios.get('/expenses/report/s3files', {
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+    })
+    .then(response => {
+        const files = response.data.files;
+        const fileList = document.getElementById('fileList');
+        files.forEach(file => {
+            const listItem = document.createElement('li');
+                const link = document.createElement('a');
+                link.href = url;
+                link.textContent = url;
+                listItem.appendChild(link);
+                fileList.appendChild(listItem);
+        });
+    })
+    .catch(error => {
+        console.error('Error fetching downloaded files:', error);
+        alert('Failed to fetch downloaded files. Please try again later.');
+    });
+
+
+
+
 }
+
+function prevPage() {
+    if (currentPage > 1) {
+        currentPage--;
+        loadExpenses();
+    }
+}
+
+function nextPage() {
+    currentPage++;
+    loadExpenses();
+}
+
+
 </script>
 </html>
