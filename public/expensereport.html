@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Expense Report</title>
+    <style>
+        table {
+            border-collapse: collapse;
+            width: 100%;
+        }
+        th, td {
+            border: 1px solid #dddddd;
+            text-align: left;
+            padding: 8px;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+    </style>
+</head>
+<body>
+    <h2>Expense Report</h2>
+    <div id="expenseReport"></div>
+</body>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    loadExpenseReport();
+});
+
+function loadExpenseReport() {
+    axios.get('/expenses/report', {
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+    })
+    .then(response => {
+        const expenses = response.data;
+        const expenseReportDiv = document.getElementById('expenseReport');
+        const table = document.createElement('table');
+        const headerRow = table.insertRow();
+        const headers = ['Date', 'Amount', 'Description', 'Category'];
+        headers.forEach(headerText => {
+            const th = document.createElement('th');
+            th.textContent = headerText;
+            headerRow.appendChild(th);
+        });
+
+        expenses.forEach(expense => {
+            const row = table.insertRow();
+            const cell1 = row.insertCell(0);
+            const cell2 = row.insertCell(1);
+            const cell3 = row.insertCell(2);
+            const cell4 = row.insertCell(3);
+            cell1.textContent = formatDate(expense.date);
+            cell2.textContent = expense.amount;
+            cell3.textContent = expense.description;
+            cell4.textContent = expense.category;
+        });
+
+        expenseReportDiv.appendChild(table);
+    })
+    .catch(error => console.error('Error loading expense report:', error));
+}
+
+function formatDate(dateString) {
+    const options = { year: 'numeric', month: 'short', day: 'numeric' };
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', options);
+}
+</script>
+</html>

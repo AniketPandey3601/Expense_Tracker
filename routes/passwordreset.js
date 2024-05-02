@@ -7,14 +7,13 @@ const Users = require('../models/Users')
 require('dotenv').config();
 
 
-// Initialize the SendinBlue API client
 const defaultClient = Sib.ApiClient.instance;
 const apiKey = defaultClient.authentications['api-key'];
 // apiKey.apiKey = process.env.API_KEY;
 
-apiKey.apiKey ='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'
+apiKey.apiKey =
 
-// Define your SendinBlue sender email address
+
 // const senderEmail = process.env.SENDER_EMAIL;
 
 const senderEmail = 'yash8864919763@gmail.com'
@@ -79,7 +78,8 @@ router.get('/resetpassword/:uuid', async (req, res) => {
 
         if (forgotPasswordRequest) {
             // Allow user to reset password
-            res.render('reset-password-form', { userId: forgotPasswordRequest.userId });
+            // res.send({ userId: forgotPasswordRequest.userId })
+            res.redirect( '/resetpassword.html');
         } else {
             // Invalid or inactive UUID
             res.status(400).send('Invalid or expired reset password link.');
@@ -89,5 +89,42 @@ router.get('/resetpassword/:uuid', async (req, res) => {
         res.status(500).send('Internal server error.');
     }
 });
+
+
+router.post('/reset', async (req, res) => {
+    try {
+        const { userId, uuid, password } = req.body;
+
+        // Update the user's password (assuming you have a User model)
+        const user = await User.findByPk(userId);
+        if (!user) {
+            return res.status(400).send('User not found');
+        }
+        // Update the user's password
+        user.password = password;
+        await user.save();
+
+        // Deactivate the reset password link
+        const forgotPasswordRequest = await ForgotPasswordRequest.findOne({
+            where: {
+                userId: userId,
+                uuid: uuid,
+                isActive: true
+            }
+        });
+        if (forgotPasswordRequest) {
+            forgotPasswordRequest.isActive = false;
+            await forgotPasswordRequest.save();
+        } else {
+            return res.status(400).send('Invalid reset password request');
+        }
+
+        res.status(200).send('Password reset successfully!');
+    } catch (error) {
+        console.error('Error resetting password:', error);
+        res.status(500).send('Internal server error.');
+    }
+});
+
 
 module.exports = router;
