@@ -263,6 +263,14 @@ function buyPremium() {
     <ul id="fileList"></ul>
 
     <div id="pagination">
+
+        <label for="expensesPerPage">Expenses Per Page:</label>
+        <select id="expensesPerPage" onchange="changeExpensesPerPage()">
+            <option value="5">5</option>
+            <option value="10">10</option>
+            <option value="15">15</option>
+            <option value="20">20</option>
+        </select>
         <button id="prevPageBtn" onclick="prevPage()">Previous</button>
         <button id="nextPageBtn" onclick="nextPage()">Next</button>
     </div>
@@ -270,6 +278,10 @@ function buyPremium() {
 <script>
 
 let currentPage = 1;
+let totalExpenses = 0;
+let totalPages = 0;
+
+let expensesPerPage = localStorage.getItem('expensesPerPage'|| 10) ;
 document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('expenseForm').addEventListener('submit', function(event) {
         event.preventDefault();
@@ -277,6 +289,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     checkPremiumStatus();
     loadExpenses();
+    document.getElementById('expensesPerPage').value = expensesPerPage;
 });
 
 function checkPremiumStatus() {
@@ -318,15 +331,39 @@ function addExpense() {
 }
 
 function loadExpenses() {
-    axios.get('/expenses?page=${currentPage}&limit=10', {
+    axios.get('/expenses', {
         headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
     })
     .then(response => {
-        response.data.forEach(expense => {
-            displayExpense(expense);
-        });
+        totalExpenses = response.data.count;
+        totalPages = Math.ceil(totalExpenses / expensesPerPage);
+        updatePaginationButtons();
+        console.log(currentPage);
+        console.log(expensesPerPage);
+
+        axios.get(`/expenses?page=${currentPage}&limit=${expensesPerPage}`, {
+            headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+        })
+        .then(response => {
+            const expenses = response.data.expenses;
+            const expenseList = document.getElementById('expensesList');
+            expenseList.innerHTML = ''; // Clear existing expense list before loading new expenses
+            expenses.forEach(expense => {
+                displayExpense(expense);
+            });
+        })
+        .catch(error => console.error('Error loading expenses:', error));
     })
-    .catch(error => console.error('Error loading expenses:', error));
+    .catch(error => console.error('Error fetching total expense count:', error));
+}
+
+
+
+function changeExpensesPerPage() {
+    const selectedValue = parseInt(document.getElementById('expensesPerPageSelect').value);
+    localStorage.setItem('expensesPerPage', selectedValue);
+    expensesPerPage = selectedValue;
+    loadExpenses();
 }
 
 function displayExpense(expense) {
@@ -460,11 +497,29 @@ function prevPage() {
         currentPage--;
         loadExpenses();
     }
+    updatePaginationButtons();
 }
 
 function nextPage() {
-    currentPage++;
+    if (currentPage < totalPages) {
+        currentPage++;
+        loadExpenses();
+    }
+    updatePaginationButtons();
+}
+
+function changeExpensesPerPage() {
+    expensesPerPage = document.getElementById('expensesPerPage').value;
+    localStorage.setItem('expensesPerPage', expensesPerPage);
     loadExpenses();
+}
+
+function updatePaginationButtons() {
+    const prevButton = document.getElementById('prevPageBtn');
+    const nextPageBtn = document.getElementById('nextPageBtn');
+
+    prevButton.disabled = currentPage === 1;
+    nextPageBtn.disabled = currentPage === totalPages || totalExpenses === 0 || (totalExpenses % expensesPerPage !== 0 && currentPage === totalPages);
 }
 
 

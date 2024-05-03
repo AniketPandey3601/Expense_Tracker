@@ -81,16 +81,40 @@ router.post('/', authenticateToken,async (req, res) => {
     }
 });
 
+router.get('/count', async (req, res) => {
+    const userId = req.user.id; // Assuming you have middleware to extract user information from JWT token
+
+    try {
+        // Use Sequelize to count the total number of expenses for the specified user
+        const totalCount = await Expense.count({
+            where: {
+                userId: userId
+            }
+        });
+
+        // Send the total count of expenses for the user as a JSON response
+        res.json({ count: totalCount });
+    } catch (error) {
+        // If an error occurs, send an error response
+        console.error('Error fetching total count of expenses:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
 
 router.get('/', authenticateToken, async (req, res) => {
     try {
         const userId = req.user.userId; 
-        const expenses = await Expense.findAll(
-            {
-                where:{userId:userId}
-            }
-        );
-        res.json(expenses);
+        const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+        const expenses = await Expense.findAll({
+            where: {
+                userId: userId
+            },
+            offset: (page - 1) * limit,
+            limit: limit
+        });
+        res.json({expenses});
     } catch (error) {
         console.log(error);
         res.status(500).send(error.message);
