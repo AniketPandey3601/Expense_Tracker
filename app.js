@@ -5,11 +5,25 @@ const loginroutes = require('./routes/login')
 const expensesroutes = require('./routes/expense')
 const razorpayRoutes = require('./routes/razorpay')
 const forgotpassRoutes = require('./routes/passwordreset')
+const compression = require('compression')
+const helmet = require('helmet');
+const https = require('https')
+const fs = require('fs')
 
 
 require('dotenv').config();
 const app = express();
 
+
+app.use(
+    helmet({
+      contentSecurityPolicy: false,
+    })
+  )
+
+  app.use(compression());
+  const privateKey = fs.readFileSync('server.key')
+  const certificate = fs.readFileSync('server.cert')
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -20,7 +34,8 @@ const Users = require('./models/Users')
 const Expense = require('./models/expenses');
 const OrderId = require('./models/orderId');
 const ForgotPasswordRequest = require('./models/forgotpasswordrequests')
-const expensereportRoutes = require('./routes/expense_report')
+const expensereportRoutes = require('./routes/expense_report');
+const { HttpStatusCode } = require('axios');
 
 
 Users.hasMany(Expense,{ foreignKey: 'userId' });
@@ -42,8 +57,10 @@ app.use('/expenses/report',expensereportRoutes)
 
 
 
+
+
 sequelize.sync().then(() => {
-    app.listen(3000, () => {
+   app.listen((process.env.PORT || 3000), () => {
       console.log(`Server is running on port 3000`);
     });
   });

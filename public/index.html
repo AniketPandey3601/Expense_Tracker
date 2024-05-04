@@ -1,4 +1,4 @@
-<!-- <!DOCTYPE html>
+<!--  <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -235,6 +235,7 @@ function buyPremium() {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
     <title>DExpense Tracker</title>
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
@@ -278,10 +279,11 @@ function buyPremium() {
 <script>
 
 let currentPage = 1;
-let totalExpenses = 0;
-let totalPages = 0;
+        let totalExpenses = 0;
+        let totalPages = 0;
+        let expensesPerPage = localStorage.getItem('expensesPerPage') || 10;
 
-let expensesPerPage = localStorage.getItem('expensesPerPage'|| 10) ;
+
 document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('expenseForm').addEventListener('submit', function(event) {
         event.preventDefault();
@@ -330,48 +332,38 @@ function addExpense() {
     document.getElementById('category').selectedIndex = 0;
 }
 
+
 function loadExpenses() {
-    axios.get('/expenses', {
-        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
-    })
-    .then(response => {
-        totalExpenses = response.data.count;
-        totalPages = Math.ceil(totalExpenses / expensesPerPage);
-        updatePaginationButtons();
-        console.log(currentPage);
-        console.log(expensesPerPage);
+            axios.get(`/expenses?page=${currentPage}&limit=${expensesPerPage}`, {
+                headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+            })
+            .then(response => {
+                const expenses = response.data.expenses;
+                totalExpenses = response.data.total;
+                totalPages = Math.ceil(totalExpenses / expensesPerPage);
+                updatePaginationButtons();
+                displayExpenses(expenses);
+            })
+            .catch(error => console.error('Error loading expenses:', error));
+        }
 
-        axios.get(`/expenses?page=${currentPage}&limit=${expensesPerPage}`, {
-            headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
-        })
-        .then(response => {
-            const expenses = response.data.expenses;
+
+
+        function changeExpensesPerPage() {
+            expensesPerPage = document.getElementById('expensesPerPage').value;
+            localStorage.setItem('expensesPerPage', expensesPerPage);
+            loadExpenses();
+        }
+
+function displayExpenses(expenses) {
             const expenseList = document.getElementById('expensesList');
-            expenseList.innerHTML = ''; // Clear existing expense list before loading new expenses
+            expenseList.innerHTML = ''; 
             expenses.forEach(expense => {
-                displayExpense(expense);
+                const entry = document.createElement('div');
+                entry.innerHTML = `Amount: ${expense.amount}, Description: ${expense.description}, Category: ${expense.category}`;
+                expenseList.appendChild(entry);
             });
-        })
-        .catch(error => console.error('Error loading expenses:', error));
-    })
-    .catch(error => console.error('Error fetching total expense count:', error));
-}
-
-
-
-function changeExpensesPerPage() {
-    const selectedValue = parseInt(document.getElementById('expensesPerPageSelect').value);
-    localStorage.setItem('expensesPerPage', selectedValue);
-    expensesPerPage = selectedValue;
-    loadExpenses();
-}
-
-function displayExpense(expense) {
-    const expenseList = document.getElementById('expensesList');
-    const entry = document.createElement('div');
-    entry.innerHTML = `Amount: ${expense.amount}, Description: ${expense.description}, Category: ${expense.category}  <button onclick="deleteExpense(${expense.id})">Delete</button>`;
-    expenseList.appendChild(entry);
-}
+        }
 
 function deleteExpense(id) {
     axios.delete(`/expenses/${id}`, {
@@ -492,36 +484,30 @@ function downloadExpenseFile() {
 
 }
 
+
 function prevPage() {
-    if (currentPage > 1) {
-        currentPage--;
-        loadExpenses();
-    }
-    updatePaginationButtons();
-}
+            if (currentPage > 1) {
+                currentPage--;
+                loadExpenses();
+            }
+        }
 
-function nextPage() {
-    if (currentPage < totalPages) {
-        currentPage++;
-        loadExpenses();
-    }
-    updatePaginationButtons();
-}
+        function nextPage() {
+            if (currentPage < totalPages) {
+                currentPage++;
+                loadExpenses();
+            }
+        }
 
-function changeExpensesPerPage() {
-    expensesPerPage = document.getElementById('expensesPerPage').value;
-    localStorage.setItem('expensesPerPage', expensesPerPage);
-    loadExpenses();
-}
+        function updatePaginationButtons() {
+            const prevButton = document.getElementById('prevPageBtn');
+            const nextPageBtn = document.getElementById('nextPageBtn');
 
-function updatePaginationButtons() {
-    const prevButton = document.getElementById('prevPageBtn');
-    const nextPageBtn = document.getElementById('nextPageBtn');
-
-    prevButton.disabled = currentPage === 1;
-    nextPageBtn.disabled = currentPage === totalPages || totalExpenses === 0 || (totalExpenses % expensesPerPage !== 0 && currentPage === totalPages);
-}
-
+            prevButton.disabled = currentPage === 1;
+            nextPageBtn.disabled = currentPage === totalPages;
+        }
 
 </script>
-</html>
+</html> 
+
+

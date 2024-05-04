@@ -9,14 +9,13 @@ require('dotenv').config();
 
 const defaultClient = Sib.ApiClient.instance;
 const apiKey = defaultClient.authentications['api-key'];
-// apiKey.apiKey = process.env.API_KEY;
-
-apiKey.apiKey ='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'
+apiKey.apiKey = process.env.API_KEY;
 
 
-// const senderEmail = process.env.SENDER_EMAIL;
 
-const senderEmail = 'yash8864919763@gmail.com'
+const senderEmail = process.env.SENDER_EMAIL;
+
+
 
 
 router.post('/forgotpassword', async (req, res) => {

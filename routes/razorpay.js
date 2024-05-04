@@ -6,10 +6,11 @@ const OrderId = require('../models/orderId');
 const PurchaseId = require('../models/purchaseId');
 const authenticateToken = require('../middleware/authenticateToken');
 const Users = require('../models/Users')
+require('dotenv').config();
 
 const razorpay = new Razorpay({
-    key_id: 'rzp_test_PmdqHSSuqH8zOe',
-    key_secret: 'UXHgKedX7yzo8IfWicgWAPWU'
+    key_id: process.env.RZP_KEY_ID,
+    key_secret: process.env.RZP_KEY_SECRET
 });
 
 router.post('/create-order', authenticateToken, async (req, res) => {

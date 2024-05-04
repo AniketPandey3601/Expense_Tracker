@@ -81,46 +81,39 @@ router.post('/', authenticateToken,async (req, res) => {
     }
 });
 
-router.get('/count', async (req, res) => {
-    const userId = req.user.id; // Assuming you have middleware to extract user information from JWT token
-
+router.get('', authenticateToken, async (req, res) => {
     try {
-        // Use Sequelize to count the total number of expenses for the specified user
-        const totalCount = await Expense.count({
-            where: {
-                userId: userId
-            }
-        });
+        const userId = req.user.userId; // Assuming the user ID is extracted correctly by authenticateToken middleware
+        const user = await Users.findByPk(userId);
 
-        // Send the total count of expenses for the user as a JSON response
-        res.json({ count: totalCount });
-    } catch (error) {
-        // If an error occurs, send an error response
-        console.error('Error fetching total count of expenses:', error);
-        res.status(500).json({ error: 'Internal server error' });
-    }
-});
+        if (!user) {
+            return res.status(404).json({ error: 'User not found' });
+        }
 
+        const expensesPerPage = parseInt(req.query.limit) || 10;
+        const currentPage = parseInt(req.query.page) || 1;
 
-router.get('/', authenticateToken, async (req, res) => {
-    try {
-        const userId = req.user.userId; 
-        const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 10;
+        const startIndex = (currentPage - 1) * expensesPerPage;
+
+        // Query to get total number of expenses
+        const total = await Expense.count({ where: { userId } });
+
+        // Query to get expenses for the current page
         const expenses = await Expense.findAll({
-            where: {
-                userId: userId
-            },
-            offset: (page - 1) * limit,
-            limit: limit
+            where: { userId },
+            offset: startIndex,
+            limit: expensesPerPage
         });
-        res.json({expenses});
+
+        res.json({
+            expenses,
+            total
+        });
     } catch (error) {
-        console.log(error);
-        res.status(500).send(error.message);
+        console.error('Error fetching expenses:', error);
+        res.status(500).json({ error: 'Internal Server Error' });
     }
 });
-
 router.delete('/:id', authenticateToken, async (req, res) => {
     let transaction;
     try {
