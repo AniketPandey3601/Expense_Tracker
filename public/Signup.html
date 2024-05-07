@@ -5,20 +5,27 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Expense Tracker</title>
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <form action="/signup" id = "signupForm">
-        Username:<input type = "text" name ="username" id="username" required><br>
-        Email: <input type="email" name="email" id ="email" required><br>
-        Password:<input type="password" name="password" id = "password"><br>
-        <button type = "submit">Submit</button>
+    <div class="container">
+        <form action="/signup" id="signupForm">
+            Username: <input type="text" name="username" id="username" required><br>
+            Email: <input type="email" name="email" id="email" required><br>
+            Password: <input type="password" name="password" id="password"><br>
+            <button type="submit">Submit</button>
+            <button class="loginButton" onclick="redirectToLogin()">Login</button>
+        </form>
 
-
-    </form>
+        
+    </div>
+    
 
 </body>
 
 <script>
+    // const baseURL = 'http://3.110.204.94';
+     const baseURL = '';
     const signupForm = document.getElementById('signupForm');
 
     signupForm.addEventListener('submit' , async(event)=>{
@@ -32,7 +39,7 @@
 
        
 
-            axios.post('/signup',{
+            axios.post(baseURL+'/signup',{
                 username:username,
                 email:email,
                 password:password
@@ -63,6 +70,10 @@
             })
         
     })
+
+    function redirectToLogin() {
+        window.location.href = '/login.html';
+    }
 
 </script>
 

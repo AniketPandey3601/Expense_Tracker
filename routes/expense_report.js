@@ -1,46 +1,55 @@
+
+
 const fs = require('fs');
 const path = require('path');
-const csv = require('csv-parser');
-const createCsvWriter = require('csv-writer').createObjectCsvWriter;
-const createObjectCsvWriter = require('csv-writer').csvWriter;
+const { createObjectCsvWriter } = require('csv-writer');
 const authenticateToken = require('../middleware/authenticateToken');
 const express = require('express');
 const router = express.Router();
-const Users = require('../models/Users')
-const Expense = require("../models/expenses")
+const Users = require('../models/Users');
+const Expense = require("../models/expenses");
 const AWS = require('aws-sdk');
-const S3File= require('../models/s3Files')
+const S3File = require('../models/s3Files');
+require('dotenv').config();
+// AWS credentials and configuration
+const accessKeyId = process.env.AWS_KEYID;
+const secretAccessKey = process.env.AWS_SECRETKEY;
+const region = process.env.AWS_REGION ;
+const bucketName = process.env.AWS_BUCKETNAME;
+
+AWS.config.update({
+    accessKeyId: accessKeyId,
+    secretAccessKey: secretAccessKey,
+    region: region
+});
 
 const s3 = new AWS.S3();
 
 router.use(authenticateToken);
 
 // Define a new endpoint to handle the download expense report request
-router.get('', async (req, res) => {
-    try {
+// const { createObjectCsvWriter } = require('csv-writer');
 
-        const userId = req.user.userId; 
+router.get('/', async (req, res) => {
+    try {
+        const userId = req.user.userId;
         const user = await Users.findByPk(userId);
         const isPremium = user.isPremium;
 
-        console.log(isPremium)
         // Check if the user is a premium user
-        if ( !isPremium) {
+        if (!isPremium) {
             return res.status(401).json({ error: 'Unauthorized. Only premium users can download reports.' });
         }
 
         // Query the database to get all expenses of the user
-        const expenses = await Expense.findAll({ userId: req.user.id });
-
+        const expenses = await Expense.findAll({ where: { userId: userId } });
 
         const currentDate = new Date().toISOString().slice(0, 10); // Get current date in YYYY-MM-DD format
         const csvFileName = `expenses_${userId}-${currentDate}.csv`;
 
-
         // Create a CSV file with the expenses data
-        const filePath = path.join(__dirname, csvFileName);
-        const csvWriter = createCsvWriter({
-            path: filePath,
+        const csvWriter = createObjectCsvWriter({
+            path: csvFileName,
             header: [
                 { id: 'amount', title: 'Amount' },
                 { id: 'description', title: 'Description' },
@@ -51,39 +60,34 @@ router.get('', async (req, res) => {
 
         await csvWriter.writeRecords(expenses);
 
+        // Read the content of the CSV file
+        const fileContent = fs.readFileSync(csvFileName, 'utf8');
+
+
         const params = {
-            Bucket: 'your-bucket-name',
+            Bucket: bucketName,
             Key: csvFileName,
-            Body: fs.createReadStream(filePath)
+            Body: fileContent, // Upload the content of the CSV file
+            ContentType: 'text/csv'
         };
 
         const uploadedFile = await s3.upload(params).promise();
 
         const s3File = await S3File.create({ userId: userId, fileName: csvFileName, url: uploadedFile.Location });
 
-        // Send the S3 file URL to the client
-        res.json({  url: s3File.url });
+        // Set response headers for CSV download
+        res.setHeader('Content-Type', 'text/csv');
+        res.setHeader('Content-Disposition', `attachment; filename="${csvFileName}"`);
 
-        // Once the CSV file is created, send it to the client
-        // res.sendFile(filePath, (err) => {
-        //     if (err) {
-        //         console.error('Error sending file:', err);
-        //         return res.status(500).json({ error: 'Internal server error.' });
-        //     }
-        //     // Cleanup: Delete the file after sending
-        //     fs.unlink(filePath, (err) => {
-        //         if (err) {
-        //             console.error('Error deleting file:', err);
-        //         }
-        //     });
-        // });
+        // Send the CSV data as response
+        res.send(fileContent);
     } catch (error) {
         console.error('Error generating expense report:', error);
         return res.status(500).json({ error: 'Internal server error.' });
     }
 });
 
-
+// Endpoint to fetch all the previous downloaded files by user
 router.get('/s3files', async (req, res) => {
     try {
         const userId = req.user.userId;
@@ -98,4 +102,3 @@ router.get('/s3files', async (req, res) => {
 });
 
 module.exports = router;
-
