@@ -1,6 +1,6 @@
-// const baseURL = 'http://3.110.204.94';
+const baseURL = 'http://3.110.204.94';
 
-const baseURL = ''
+// const baseURL = '';
 
 let currentPage = 1;
         let totalExpenses = 0;
